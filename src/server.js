@@ -1,4 +1,5 @@
 const express = require("express");
+const crypto = require("crypto");
 const cors = require("cors");
 const path = require("path");
 const { translatePost, isCached } = require("./translator");
@@ -42,7 +43,23 @@ app.use(
   })
 );
 
-app.use(express.json({ limit: "1mb" }));
+// Capture raw body for Slack signature verification, then parse
+app.use(
+  express.json({
+    limit: "1mb",
+    verify: (req, _res, buf) => {
+      req.rawBody = buf;
+    },
+  })
+);
+app.use(
+  express.urlencoded({
+    extended: true,
+    verify: (req, _res, buf) => {
+      req.rawBody = buf;
+    },
+  })
+);
 
 // --- Static files ---
 app.use(express.static(path.join(__dirname, "..", "public")));
@@ -155,6 +172,119 @@ function inlineFormat(text) {
   text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
   return text;
 }
+
+// --- Slack slash command ---
+const SLACK_SIGNING_SECRET = process.env.SLACK_SIGNING_SECRET || "";
+const APP_URL = process.env.APP_URL || "";
+
+function verifySlackRequest(req) {
+  if (!SLACK_SIGNING_SECRET) return false;
+  const timestamp = req.headers["x-slack-request-timestamp"];
+  if (!timestamp) return false;
+  // Reject requests older than 5 minutes
+  if (Math.abs(Date.now() / 1000 - Number(timestamp)) > 300) return false;
+
+  const sigBase = `v0:${timestamp}:${req.rawBody}`;
+  const mySignature =
+    "v0=" +
+    crypto
+      .createHmac("sha256", SLACK_SIGNING_SECRET)
+      .update(sigBase)
+      .digest("hex");
+  const slackSignature = req.headers["x-slack-signature"] || "";
+  return crypto.timingSafeEqual(
+    Buffer.from(mySignature),
+    Buffer.from(slackSignature)
+  );
+}
+
+function extractSlug(text) {
+  // Match substack.com/p/slug pattern
+  const match = text.match(/substack\.com\/p\/([a-z0-9-]+)/i);
+  if (match) return match[1];
+  // If they just pasted a slug directly
+  const slugOnly = text.trim().replace(/^\//, "");
+  if (/^[a-z0-9-]+$/i.test(slugOnly)) return slugOnly;
+  return null;
+}
+
+app.post("/api/slack/translate", async (req, res) => {
+  // Verify Slack signature
+  if (!verifySlackRequest(req)) {
+    return res.status(401).json({ error: "Invalid signature" });
+  }
+
+  const text = (req.body.text || "").trim();
+  const responseUrl = req.body.response_url;
+
+  const slug = extractSlug(text);
+  if (!slug) {
+    return res.json({
+      response_type: "ephemeral",
+      text: "Please provide a Substack URL or slug.\nExample: `/translate https://elcontenido.substack.com/p/product-truth`",
+    });
+  }
+
+  const postId = `/p/${slug}`;
+
+  // Check cache
+  if (isCached(postId)) {
+    const readUrl = APP_URL ? `${APP_URL}/read/${slug}` : `/read/${slug}`;
+    return res.json({
+      response_type: "ephemeral",
+      text: `Already cached! ${readUrl}`,
+    });
+  }
+
+  // Acknowledge immediately (Slack 3-second timeout)
+  res.json({
+    response_type: "ephemeral",
+    text: `Translating *${slug}*... I'll let you know when it's ready.`,
+  });
+
+  // Background: fetch, translate, notify
+  (async () => {
+    try {
+      const post = await fetchPost(slug);
+      if (!post.contentText) {
+        throw new Error("Post not found or has no content");
+      }
+
+      await translatePost({
+        postId,
+        title: post.title,
+        subtitle: post.subtitle,
+        content: post.contentText,
+      });
+
+      const readUrl = APP_URL ? `${APP_URL}/read/${slug}` : `/read/${slug}`;
+      const message = {
+        response_type: "ephemeral",
+        text: `Translation cached for *${post.title}*\n${readUrl}`,
+      };
+
+      if (responseUrl) {
+        await fetch(responseUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(message),
+        });
+      }
+    } catch (err) {
+      console.error("Slack translate error:", err.message);
+      if (responseUrl) {
+        await fetch(responseUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            response_type: "ephemeral",
+            text: `Translation failed: ${err.message}`,
+          }),
+        });
+      }
+    }
+  })();
+});
 
 // --- Serve demo page at /demo ---
 app.get("/demo", (_req, res) => {
