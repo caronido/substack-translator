@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Sunday Nest — Demo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/widget.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Newsreader', Georgia, serif;
+      background: #ffffff;
+      color: #1a1a1a;
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+    }
+    .container {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 40px 20px 80px;
+    }
+    /* Substack-style header */
+    .publication-header {
+      text-align: center;
+      padding: 30px 0 20px;
+      border-bottom: 1px solid #e8e4df;
+      margin-bottom: 32px;
+    }
+    .publication-name {
+      font-size: 24px;
+      font-weight: 600;
+      color: #1a1a1a;
+      letter-spacing: -0.01em;
+    }
+    .publication-tagline {
+      font-size: 15px;
+      color: #7a756f;
+      margin-top: 4px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    /* Post header */
+    h1.post-title {
+      font-size: 36px;
+      font-weight: 600;
+      line-height: 1.2;
+      margin-bottom: 12px;
+      letter-spacing: -0.02em;
+    }
+    h3.subtitle {
+      font-size: 20px;
+      font-weight: 400;
+      color: #6b6560;
+      line-height: 1.4;
+      margin-bottom: 24px;
+    }
+    .post-meta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-size: 14px;
+      color: #7a756f;
+      margin-bottom: 32px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid #e8e4df;
+    }
+    .author-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #c4956a 0%, #e8c9a8 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+    .author-name { font-weight: 600; color: #1a1a1a; }
+    /* Post body — Substack .body.markup selector */
+    .body.markup p {
+      font-size: 18px;
+      margin-bottom: 1.4em;
+    }
+    .body.markup h2 {
+      font-size: 26px;
+      font-weight: 600;
+      margin: 2em 0 0.6em;
+      letter-spacing: -0.01em;
+    }
+    .body.markup strong { font-weight: 600; }
+    .body.markup a {
+      color: #c4956a;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+    .body.markup a:hover { color: #a87a52; }
+    .body.markup ul, .body.markup ol {
+      margin-bottom: 1.4em;
+      padding-left: 1.5em;
+    }
+    .body.markup li {
+      font-size: 18px;
+      margin-bottom: 0.5em;
+    }
+    .body.markup blockquote {
+      border-left: 3px solid #c4956a;
+      padding-left: 20px;
+      margin: 1.5em 0;
+      color: #5a5550;
+      font-style: italic;
+    }
+    .divider {
+      text-align: center;
+      margin: 2em 0;
+      color: #c4956a;
+      font-size: 20px;
+      letter-spacing: 0.3em;
+    }
+    /* Footer */
+    .post-footer {
+      margin-top: 48px;
+      padding-top: 24px;
+      border-top: 1px solid #e8e4df;
+      text-align: center;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-size: 13px;
+      color: #999;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Substack-style publication header -->
+    <div class="publication-header">
+      <div class="publication-name">The Sunday Nest 🪺</div>
+      <div class="publication-tagline">VC, AI & Tech in Latin America</div>
+    </div>
+
+    <!-- Translation widget mount point -->
+    <div id="nest-translator" data-post-id="demo-ai-traditional-industries"></div>
+
+    <!-- Post title -->
+    <h1 class="post-title">When AI Meets Tortillas: Why Latin America's Traditional Industries Are the Next Frontier</h1>
+
+    <!-- Subtitle -->
+    <h3 class="subtitle">Forget another SaaS dashboard. The real opportunity is in the $400B industries that haven't changed in decades.</h3>
+
+    <!-- Post meta -->
+    <div class="post-meta">
+      <div class="author-avatar">🪺</div>
+      <div>
+        <div class="author-name">Ana Carolina Mexia Ponce</div>
+        <div>Feb 23, 2026 &middot; 6 min read</div>
+      </div>
+    </div>
+
+    <!-- Post body -->
+    <div class="body markup">
+      <p>Last week I was in Guadalajara, and I had one of those conversations that completely shifts your mental model. I was sitting across from the founder of a startup that uses computer vision to grade avocados on the packing line. Yes, avocados. And honestly? It might be one of the most compelling AI companies I've seen this year.</p>
+
+      <p>Here's the thing: we keep looking for the next big AI play in the usual places — fintech, healthtech, enterprise SaaS. But I think we're missing something massive that's hiding in plain sight.</p>
+
+      <h2>The $400 Billion Blind Spot</h2>
+
+      <p>Latin America's traditional industries — agriculture, food processing, textiles, mining, construction — represent roughly <strong>$400 billion in annual GDP</strong> across the region. These are industries that employ millions, generate real revenue, and have barely been touched by technology.</p>
+
+      <p>I've seen this pattern before: investors chase the "sexy" sectors while enormous markets sit right there, waiting for someone brave enough to build for them.</p>
+
+      <p>Think about it:</p>
+
+      <ul>
+        <li><strong>Agriculture</strong> accounts for 5-15% of GDP across most Latin American countries, yet most farms still operate on intuition and tradition</li>
+        <li><strong>Food processing</strong> in Mexico alone is a $130B industry where quality control is still done by human eye</li>
+        <li><strong>Textile manufacturing</strong> across Central America employs over 1 million people with minimal automation</li>
+      </ul>
+
+      <p>These aren't "boring" industries. They're <strong>massive, underserved markets</strong> with real willingness to pay for solutions that work.</p>
+
+      <h2>Why Now? Three Converging Forces</h2>
+
+      <p><strong>1. AI models got cheap enough.</strong> Running inference on a cloud GPU used to cost a fortune. Now, with models like those optimized for edge deployment, you can run real-time computer vision on a $200 device sitting in a tortilla factory. The economics finally work.</p>
+
+      <p><strong>2. The labor math changed.</strong> Across Latin America, the manufacturing workforce is aging. In Mexico, the median age of agricultural workers has risen by 8 years in the last decade. Companies aren't adopting AI because it's cool — they're adopting it because they literally cannot find enough skilled workers.</p>
+
+      <p><strong>3. Export pressure demands quality.</strong> As Latin American exporters compete globally, buyers in the US, Europe, and Asia demand consistent quality documentation. AI-powered quality control isn't a nice-to-have — it's becoming a requirement to access premium markets.</p>
+
+      <div class="divider">* * *</div>
+
+      <h2>What the Best Founders Are Building</h2>
+
+      <p>Let me share three patterns I'm seeing from the founders who are getting this right:</p>
+
+      <p><strong>The "copilot for the maestro" approach.</strong> The best startups aren't trying to replace the experienced factory manager or the master baker. They're building tools that augment their expertise. One founder told me: "Our AI doesn't replace the maestro — it gives him superpowers." That's exactly the right framing.</p>
+
+      <p><strong>Vertical-specific, horizontal tech.</strong> Smart founders are taking horizontal AI capabilities (computer vision, predictive analytics, NLP) and packaging them for specific verticals with deep domain knowledge. A generic "AI quality control" platform doesn't work. An AI system that understands the 47 defect types specific to Hass avocados? That's a business.</p>
+
+      <p><strong>Hardware-light, insight-heavy.</strong> The winning model isn't selling expensive hardware. It's using commodity cameras and sensors paired with sophisticated software. Low capex for the customer, high margins for the startup, recurring revenue from the insights layer.</p>
+
+      <h2>The Nido Ventures Thesis</h2>
+
+      <p>At Nido Ventures, we've been quietly building conviction in this space for the past two years. We believe the intersection of AI and Latin America's traditional industries will produce multiple billion-dollar companies in the next decade.</p>
+
+      <p>Why? Because the market is huge, the pain is real, the timing is right, and — perhaps most importantly — the founders are showing up. I'm seeing more and more exceptional technical talent choosing to build for these industries rather than defaulting to another B2B SaaS play.</p>
+
+      <blockquote>The most exciting companies aren't the ones building AI for Silicon Valley. They're the ones building AI for the tortilla factory, the avocado grove, and the textile mill.</blockquote>
+
+      <p>If you're a founder building at this intersection, I want to hear from you. Seriously. Hit reply or DM me. This is exactly the kind of company we want to back at the seed stage.</p>
+
+      <p>Until next Sunday,</p>
+
+      <p>Ana 🪺</p>
+    </div>
+
+    <div class="post-footer">
+      This is a demo of the Nest Translator widget. &mdash; <a href="/health" style="color:#c4956a">API Health</a>
+    </div>
+  </div>
+
+  <!-- Widget script -->
+  <script>
+    window.NEST_TRANSLATOR_API = window.location.origin;
+  </script>
+  <script src="/widget.js"></script>
+</body>
+</html>

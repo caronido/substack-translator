@@ -1,0 +1,80 @@
+/* Nest Translator Widget — Substack-style toggle */
+.nest-translator-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  margin: 0 auto 1.5rem;
+  width: fit-content;
+  background: #f5f1ec;
+  border-radius: 100px;
+  padding: 4px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 14px;
+  user-select: none;
+}
+
+.nest-translator-toggle button {
+  border: none;
+  background: transparent;
+  padding: 8px 20px;
+  border-radius: 100px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  color: #6b6560;
+  transition: all 0.25s ease;
+  line-height: 1;
+  letter-spacing: 0.01em;
+}
+
+.nest-translator-toggle button:hover {
+  color: #3d3832;
+}
+
+.nest-translator-toggle button.active {
+  background: #c4956a;
+  color: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.nest-translator-toggle button:focus-visible {
+  outline: 2px solid #c4956a;
+  outline-offset: 2px;
+}
+
+/* Loading spinner */
+.nest-translator-toggle.loading button {
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+.nest-translator-spinner {
+  display: none;
+  width: 16px;
+  height: 16px;
+  border: 2px solid #f5f1ec;
+  border-top-color: #c4956a;
+  border-radius: 50%;
+  animation: nest-spin 0.6s linear infinite;
+  margin: 0 8px;
+}
+
+.nest-translator-toggle.loading .nest-translator-spinner {
+  display: inline-block;
+}
+
+@keyframes nest-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Fade transition on content swap */
+.nest-translate-fade {
+  transition: opacity 0.3s ease;
+}
+
+.nest-translate-fade.fading {
+  opacity: 0;
+}
