@@ -2,6 +2,8 @@ const express = require("express");
 const cors = require("cors");
 const path = require("path");
 const { translatePost, isCached } = require("./translator");
+const { fetchPost } = require("./reader");
+const { renderPage } = require("./template");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -95,6 +97,64 @@ app.post("/api/pre-translate", async (req, res) => {
       .json({ error: "Pre-translation failed", detail: err.message });
   }
 });
+
+// --- Standalone translated post page ---
+app.get("/read/:slug", async (req, res) => {
+  try {
+    const { slug } = req.params;
+    const postId = `/p/${slug}`;
+
+    // Fetch the original post from Substack
+    const post = await fetchPost(slug);
+
+    if (!post.contentText) {
+      return res.status(404).send("Post not found or has no content.");
+    }
+
+    // Translate (uses cache if available)
+    const translated = await translatePost({
+      postId,
+      title: post.title,
+      subtitle: post.subtitle,
+      content: post.contentText,
+    });
+
+    // Convert translated markdown-ish content to HTML
+    translated.contentHtml = formatContentToHtml(translated.content);
+
+    res.send(renderPage({ post, translated }));
+  } catch (err) {
+    console.error("Reader error:", err.message);
+    res.status(500).send("Failed to load translated post. Please try again.");
+  }
+});
+
+/**
+ * Convert translated plain text / markdown to HTML paragraphs.
+ */
+function formatContentToHtml(text) {
+  if (!text) return "";
+  if (text.includes("<p>") || text.includes("<div>")) return text;
+
+  return text
+    .split(/\n\n+/)
+    .map((para) => {
+      let html = para.trim();
+      if (!html) return "";
+      if (html.startsWith("### "))
+        return "<h3>" + inlineFormat(html.slice(4)) + "</h3>";
+      if (html.startsWith("## "))
+        return "<h2>" + inlineFormat(html.slice(3)) + "</h2>";
+      return "<p>" + inlineFormat(html).replace(/\n/g, "<br>") + "</p>";
+    })
+    .join("\n");
+}
+
+function inlineFormat(text) {
+  text = text.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+  text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
+  return text;
+}
 
 // --- Serve demo page at /demo ---
 app.get("/demo", (_req, res) => {
