@@ -4,6 +4,51 @@ const SUBSTACK_BASE =
   process.env.SUBSTACK_URL || "https://elcontenido.substack.com";
 
 /**
+ * Convert HTML to markdown-ish text preserving links, bold, italic, headings.
+ */
+function htmlToMarkdown(html) {
+  const $ = cheerio.load(html);
+
+  // Convert links to markdown
+  $("a").each((_i, el) => {
+    const href = $(el).attr("href") || "";
+    const text = $(el).text();
+    if (href && text) {
+      $(el).replaceWith(`[${text}](${href})`);
+    }
+  });
+
+  // Convert bold/strong
+  $("strong, b").each((_i, el) => {
+    $(el).replaceWith(`**${$(el).text()}**`);
+  });
+
+  // Convert italic/em
+  $("em, i").each((_i, el) => {
+    $(el).replaceWith(`*${$(el).text()}*`);
+  });
+
+  // Convert headings
+  $("h1, h2, h3, h4, h5, h6").each((_i, el) => {
+    const level = el.tagName.replace("h", "");
+    const prefix = "#".repeat(Number(level));
+    $(el).replaceWith(`\n\n${prefix} ${$(el).text()}\n\n`);
+  });
+
+  // Convert paragraphs and divs to double newlines
+  $("p, div").each((_i, el) => {
+    $(el).append("\n\n");
+  });
+
+  // Convert line breaks
+  $("br").each((_i, el) => {
+    $(el).replaceWith("\n");
+  });
+
+  return $.text().replace(/\n{3,}/g, "\n\n").trim();
+}
+
+/**
  * Extract a post identifier (slug or UUID) and any query params from input.
  */
 function parseInput(slugOrUrl) {
@@ -41,12 +86,11 @@ async function fetchPost(slugOrUrl) {
   // The API returns the real slug even when fetched by UUID
   const slug = post.slug || identifier;
 
-  // Extract plain text from body_html for translation
+  // Convert body_html to markdown-ish text that preserves links
   let contentText = "";
   const contentHtml = post.body_html || "";
   if (contentHtml) {
-    const $ = cheerio.load(contentHtml);
-    contentText = $.text().trim();
+    contentText = htmlToMarkdown(contentHtml);
   }
 
   const meta = {
