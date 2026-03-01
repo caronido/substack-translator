@@ -249,20 +249,24 @@ app.post("/api/slack/translate", async (req, res) => {
   // Background: fetch, translate, notify
   (async () => {
     try {
-      // Use full URL if available (supports draft share links with tokens)
+      // Use full URL if available (supports draft preview links)
       const post = await fetchPost(fullUrl || slug);
       if (!post.contentText) {
         throw new Error("Post not found or has no content");
       }
 
+      // Use the real slug from the API (resolves UUIDs to actual slugs)
+      const realSlug = post.slug || slug;
+      const realPostId = `/p/${realSlug}`;
+
       await translatePost({
-        postId,
+        postId: realPostId,
         title: post.title,
         subtitle: post.subtitle,
         content: post.contentText,
       });
 
-      const readUrl = APP_URL ? `${APP_URL}/read/${slug}` : `/read/${slug}`;
+      const readUrl = APP_URL ? `${APP_URL}/read/${realSlug}` : `/read/${realSlug}`;
       const message = {
         response_type: "ephemeral",
         text: `Translation cached for *${post.title}*\n${readUrl}`,

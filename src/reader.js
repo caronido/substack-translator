@@ -4,24 +4,28 @@ const SUBSTACK_BASE =
   process.env.SUBSTACK_URL || "https://elcontenido.substack.com";
 
 /**
- * Fetch a Substack post and extract title, subtitle, content HTML, and metadata.
- * Accepts a slug ("product-truth") or a full URL (including draft share links with tokens).
+ * Extract a post identifier (slug or UUID) and any query params from input.
  */
-async function fetchPost(slugOrUrl) {
-  let slug, url;
-
+function parseInput(slugOrUrl) {
   if (slugOrUrl.startsWith("http")) {
-    // Full URL provided (e.g. draft share link with ?token=...)
     const parsed = new URL(slugOrUrl);
     const pathMatch = parsed.pathname.match(/\/p\/([a-z0-9-]+)/i);
-    slug = pathMatch ? pathMatch[1] : slugOrUrl;
-    url = slugOrUrl; // preserve query params (token, etc.)
-  } else {
-    slug = slugOrUrl;
-    url = `${SUBSTACK_BASE}/p/${slug}`;
+    return pathMatch ? pathMatch[1] : slugOrUrl;
   }
+  return slugOrUrl;
+}
 
-  const res = await fetch(url, {
+/**
+ * Fetch a Substack post via the API and extract title, subtitle, content, and metadata.
+ * Accepts a slug ("product-truth"), a UUID, or a full URL (including draft preview links).
+ * Works for both published posts and drafts.
+ */
+async function fetchPost(slugOrUrl) {
+  const identifier = parseInput(slugOrUrl);
+
+  // Use Substack's API — works for slugs, UUIDs, published posts, and drafts
+  const apiUrl = `${SUBSTACK_BASE}/api/v1/posts/${identifier}`;
+  const res = await fetch(apiUrl, {
     headers: {
       "User-Agent":
         "Mozilla/5.0 (compatible; NestTranslator/1.0; +https://github.com/nest-translator)",
@@ -32,55 +36,34 @@ async function fetchPost(slugOrUrl) {
     throw new Error(`Failed to fetch post: ${res.status} ${res.statusText}`);
   }
 
-  const html = await res.text();
-  const $ = cheerio.load(html);
+  const post = await res.json();
 
-  // Extract title
-  const title =
-    $("h1.post-title").first().text().trim() ||
-    $("h1").first().text().trim() ||
-    "";
+  // The API returns the real slug even when fetched by UUID
+  const slug = post.slug || identifier;
 
-  // Extract subtitle
-  const subtitle =
-    $("h3.subtitle").first().text().trim() ||
-    "";
+  // Extract plain text from body_html for translation
+  let contentText = "";
+  const contentHtml = post.body_html || "";
+  if (contentHtml) {
+    const $ = cheerio.load(contentHtml);
+    contentText = $.text().trim();
+  }
 
-  // Extract post body HTML
-  const bodyEl = $(".body.markup").first();
-  const contentHtml = bodyEl.length ? bodyEl.html().trim() : "";
-
-  // Extract plain text for translation
-  const contentText = bodyEl.length ? bodyEl.text().trim() : "";
-
-  // Extract metadata from JSON-LD
-  let meta = {};
-  $('script[type="application/ld+json"]').each((_i, el) => {
-    try {
-      const data = JSON.parse($(el).html());
-      if (data["@type"] === "NewsArticle") {
-        meta = {
-          authors: (data.author || []).map((a) => a.name).join(", "),
-          datePublished: data.datePublished || "",
-          image: Array.isArray(data.image)
-            ? data.image[0]?.url || ""
-            : data.image || "",
-          description: data.description || "",
-          url: data.url || url,
-        };
-      }
-    } catch (_e) {
-      // ignore parse errors
-    }
-  });
+  const meta = {
+    authors: (post.publishedBylines || []).map((a) => a.name).join(", ") || "",
+    datePublished: post.post_date || "",
+    image: post.cover_image || "",
+    description: post.description || post.subtitle || "",
+    url: post.canonical_url || `${SUBSTACK_BASE}/p/${slug}`,
+  };
 
   return {
     slug,
-    title,
-    subtitle,
+    title: post.title || "",
+    subtitle: post.subtitle || "",
     contentHtml,
     contentText,
-    originalUrl: url,
+    originalUrl: post.canonical_url || `${SUBSTACK_BASE}/p/${slug}`,
     meta,
   };
 }
