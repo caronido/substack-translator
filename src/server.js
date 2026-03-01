@@ -9,6 +9,9 @@ const { renderPage } = require("./template");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Cache post metadata so /read/:slug works even for unpublished drafts
+const postMetaCache = new Map();
+
 // --- CORS ---
 const allowedOrigins = (() => {
   const extra = process.env.ALLOWED_ORIGINS
@@ -121,11 +124,19 @@ app.get("/read/:slug", async (req, res) => {
     const { slug } = req.params;
     const postId = `/p/${slug}`;
 
-    // Fetch the original post from Substack
-    const post = await fetchPost(slug);
+    // Try to fetch from Substack API; fall back to cached metadata (for drafts)
+    let post;
+    try {
+      post = await fetchPost(slug);
+    } catch (fetchErr) {
+      console.log(`API fetch failed for ${slug}, checking metadata cache...`);
+      post = postMetaCache.get(slug);
+    }
 
-    if (!post.contentText) {
-      return res.status(404).send("Post not found or has no content.");
+    if (!post || !post.contentText) {
+      return res
+        .status(404)
+        .send("Post not found. If this is a draft, run /translate first to pre-cache it.");
     }
 
     // Translate (uses cache if available)
@@ -258,6 +269,9 @@ app.post("/api/slack/translate", async (req, res) => {
       // Use the real slug from the API (resolves UUIDs to actual slugs)
       const realSlug = post.slug || slug;
       const realPostId = `/p/${realSlug}`;
+
+      // Cache post metadata so /read/ works for drafts
+      postMetaCache.set(realSlug, post);
 
       await translatePost({
         postId: realPostId,
