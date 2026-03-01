@@ -5,9 +5,22 @@ const SUBSTACK_BASE =
 
 /**
  * Fetch a Substack post and extract title, subtitle, content HTML, and metadata.
+ * Accepts a slug ("product-truth") or a full URL (including draft share links with tokens).
  */
-async function fetchPost(slug) {
-  const url = `${SUBSTACK_BASE}/p/${slug}`;
+async function fetchPost(slugOrUrl) {
+  let slug, url;
+
+  if (slugOrUrl.startsWith("http")) {
+    // Full URL provided (e.g. draft share link with ?token=...)
+    const parsed = new URL(slugOrUrl);
+    const pathMatch = parsed.pathname.match(/\/p\/([a-z0-9-]+)/i);
+    slug = pathMatch ? pathMatch[1] : slugOrUrl;
+    url = slugOrUrl; // preserve query params (token, etc.)
+  } else {
+    slug = slugOrUrl;
+    url = `${SUBSTACK_BASE}/p/${slug}`;
+  }
+
   const res = await fetch(url, {
     headers: {
       "User-Agent":

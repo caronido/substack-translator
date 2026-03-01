@@ -198,14 +198,18 @@ function verifySlackRequest(req) {
   );
 }
 
-function extractSlug(text) {
-  // Match substack.com/p/slug pattern
-  const match = text.match(/substack\.com\/p\/([a-z0-9-]+)/i);
-  if (match) return match[1];
+function extractSlugAndUrl(text) {
+  // Check for a full URL (could be a draft share link with ?token=...)
+  const urlMatch = text.match(/(https?:\/\/[^\s]+substack\.com\/p\/[^\s]+)/i);
+  if (urlMatch) {
+    const fullUrl = urlMatch[1];
+    const slugMatch = fullUrl.match(/\/p\/([a-z0-9-]+)/i);
+    return { slug: slugMatch ? slugMatch[1] : null, fullUrl };
+  }
   // If they just pasted a slug directly
   const slugOnly = text.trim().replace(/^\//, "");
-  if (/^[a-z0-9-]+$/i.test(slugOnly)) return slugOnly;
-  return null;
+  if (/^[a-z0-9-]+$/i.test(slugOnly)) return { slug: slugOnly, fullUrl: null };
+  return { slug: null, fullUrl: null };
 }
 
 app.post("/api/slack/translate", async (req, res) => {
@@ -217,11 +221,11 @@ app.post("/api/slack/translate", async (req, res) => {
   const text = (req.body.text || "").trim();
   const responseUrl = req.body.response_url;
 
-  const slug = extractSlug(text);
+  const { slug, fullUrl } = extractSlugAndUrl(text);
   if (!slug) {
     return res.json({
       response_type: "ephemeral",
-      text: "Please provide a Substack URL or slug.\nExample: `/translate https://elcontenido.substack.com/p/product-truth`",
+      text: "Please provide a Substack URL or slug.\nExample: `/translate https://elcontenido.substack.com/p/product-truth`\nDraft share links with tokens also work!",
     });
   }
 
@@ -245,7 +249,8 @@ app.post("/api/slack/translate", async (req, res) => {
   // Background: fetch, translate, notify
   (async () => {
     try {
-      const post = await fetchPost(slug);
+      // Use full URL if available (supports draft share links with tokens)
+      const post = await fetchPost(fullUrl || slug);
       if (!post.contentText) {
         throw new Error("Post not found or has no content");
       }
