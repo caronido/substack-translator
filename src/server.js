@@ -283,7 +283,7 @@ app.post("/api/slack/translate", async (req, res) => {
       const readUrl = APP_URL ? `${APP_URL}/read/${realSlug}` : `/read/${realSlug}`;
       const message = {
         response_type: "ephemeral",
-        text: `Translation cached for *${post.title}*\n${readUrl}`,
+        text: `✅ Translation cached for *${post.title}*\n\n📖 ${readUrl}\n\n📋 Paste this in your post:\n\`<a href="${readUrl}">Leer en Español</a>\``,
       };
 
       if (responseUrl) {
